@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#0f172a" />
+  <title>Fracture Surgical Indications</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦴</text></svg>">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent; }
+    body { padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState } = React;
+
+    // Comprehensive Fracture Database
+    const fractureDatabase = {
+      // UPPER LIMB
+      "11": {
+        name: "Proximal Humerus",
+        aoCode: "11",
+        region: "Upper Limb",
+        segments: { "11A": "2-part", "11B": "3-part", "11C": "4-part" },
+        adultRules: {
+          ageThreshold: 16,
+          absoluteSurgical: [
+            "4-part fracture in active patient",
+            "Fracture-dislocation (any type)",
+            "Head-splitting fracture",
+            "Displaced surgical neck with vascular compromise",
+            "Open fracture",
+            "Displaced greater tuberosity >5mm"
+          ],
+          relativeSurgical: ["3-part fracture in active patient", "Displaced 2-part unstable after reduction"],
+          conservativeAcceptable: ["Minimally displaced (Neer 1-part)", "Impacted valgus in elderly"],
+          defaultTreatment: "ORIF locking plate/IM nail; Hemiarthroplasty/RSA for 4-part in elderly",
+          keyPoints: ["Neer: >1cm displacement or >45° = displaced", "CT 3D for planning", "Check axillary nerve", "AVN risk increases with displacement"],
+          evidence: "4-part fractures have high AVN risk; prosthetic replacement in older patients"
+        }
+      },
+      "12": {
+        name: "Humeral Shaft",
+        aoCode: "12",
+        region: "Upper Limb",
+        segments: { "12A": "Simple", "12B": "Wedge", "12C": "Complex" },
+        adultRules: {
+          ageThreshold: 16,
+          absoluteSurgical: ["Open fracture", "Vascular injury", "Floating elbow", "Polytrauma", "Bilateral", "Radial nerve palsy AFTER manipulation", "Unacceptable alignment (>20° sagittal, >30° coronal)"],
+          conservativeAcceptable: ["Most closed fractures - functional bracing", "Accept <20° sagittal, <30° coronal, <3cm shortening"],
+          defaultTreatment: "Functional brace (Sarmiento); ORIF plate if operative",
+          keyPoints: ["Heals well conservatively", "Holstein-Lewis (distal 1/3 spiral) = radial nerve risk", "Plate: 6 cortices each side"],
+          evidence: "Great majority unite with non-operative treatment"
+        }
+      },
+      "13": {
+        name: "Distal Humerus",
+        aoCode: "13",
+        region: "Upper Limb",
+        segments: { "13A": "Extraarticular", "13B": "Partial articular", "13C": "Complete articular" },
+        adultRules: {
+          ageThreshold: 16,
+          absoluteSurgical: ["Displaced intra-articular (13B, 13C)", "Any displaced supracondylar in adult", "Open", "Vascular injury"],
+          defaultTreatment: "ORIF dual plating (medial + posterolateral)",
+          keyPoints: ["Olecranon osteotomy for exposure", "Protect ulnar nerve", "Early mobilization critical", "TEA option in elderly comminuted"],
+          evidence: "Complex intra-articular requires anatomical reduction"
+        },
+        pediatricRules: {
+          absoluteSurgical: ["Gartland IIB and III supracondylar", "Vascular compromise", "Open", "Compartment syndrome"],
+          defaultTreatment: "Closed reduction + K-wires",
+          keyPoints: ["Most common pediatric elbow fracture (5-7y)", "Check brachial artery + AIN", "Lateral pins safer"]
+        }
+      },
+      "2R1": {
+        name: "Radial Head/Neck",
+        aoCode: "2R1",
+        region: "Upper Limb",
+        segments: { "2R1A": "Neck", "2R1B": "Partial articular", "2R1C": "Complete articular" },
+        adultRules: {
+          ageThreshold: 16,
+          absoluteSurgical: ["Mason III with ligament injury", "Mason IV (with dislocation)", "Terrible triad", "Essex-Lopresti", "Mechanical block >2mm"],
+          conservativeAcceptable: ["Mason I (undisplaced)", "Stable elbow, no block"],
+          defaultTreatment: "ORIF mini-screws (safe zone); Radial head replacement if unreconstructable",
+          keyPoints: ["Mason I=undisplaced, II=displaced, III=comminuted, IV=+dislocation", "Safe zone: 110° arc", "NEVER excise if ligament injury", "Check DRUJ"],
+          evidence: "If soft tissue injury present, excision is contraindicated"
+        }
+      },
+      "2U1": {
+        name: "Olecranon",
+        aoCode: "2U1",
+        region: "Upper Limb",
+        segments: { "2U1A": "Avulsion", "2U1B": "Partial articular", "2U1C": "Complete articular" },
+        adultRules: {
+          ageThreshold: 16,
+          absoluteSurgical: ["Displaced >2mm gap", "Loss of active extension", "Intra-articular step-off", "Open"],
+          conservativeAcceptable: ["Undisplaced with intact triceps", "Elderly low-demand with comminution"],
+          defaultTreatment: "Tension band wiring (TBW) or plate",
+          keyPoints: ["Test active extension against gravity", "TBW for simple transverse", "Plate for oblique/comminuted", "Hardware often prominent"],
+          evidence: "Loss of active extension = operative indication"
+        }
+      },
+      "22": {
+        name: "Both Bone Forearm",
+        aoCode: "22",
+        region: "Upper Limb",
+        segments: { "22A": "Simple", "22B": "Wedge", "22C": "Complex" },
+        adultRules: {
+          ageThreshold: 16,
+          absoluteSurgical: ["ALL displaced adult both-bone forearm fractures", "Open", "Compartment syndrome", "Monteggia/Galeazzi"],
+          defaultTreatment: "ORIF both bones with 3.5mm LC-DCP plates",
+          keyPoints: ["Adults: virtually always operative", "Restore radial bow", "6 cortices each side minimum", "Check DRUJ and PRUJ"],
+          evidence: "No rotational remodeling in adults - must restore anatomy"
+        },
+        pediatricRules: {
+          absoluteSurgical: ["Open", "Irreducible", "Unacceptable alignment after reduction", "Compartment syndrome"],
+          conservativeAcceptable: { "under10": { description: "Up to 15° angulation, full remodeling" }, "over10": { description: "<10° angulation acceptable" }},
+          defaultTreatment: "Closed reduction + above-elbow cast",
+          keyPoints: ["Rotation does NOT remodel", "Younger = more remodeling", "Remanipulation if slips >7-10 days"]
+        }
+      },
+      "23": {
+        name: "Distal Radius",
+        aoCode: "23",
+        region: "Upper Limb",
+        segments: { "23A": "Extraarticular", "23B": "Partial articular", "23C": "Complete articular" },
+        adultRules: {
+          ageThreshold: 16,
+          absoluteSurgical: ["Intra-articular step >2mm", "Dorsal tilt >10°", "Radial shortening >3mm", "Unstable after reduction", "Open", "Associated carpal injury"],
+          conservativeAcceptable: ["Extraarticular, stable, acceptable alignment", "Elderly low-demand"],
+          defaultTreatment: "Volar locking plate (ORIF); Cast if conservative",
+          keyPoints: ["Restore volar tilt (normal 11°)", "Radial inclination (normal 22°)", "Radial height", "Check DRUJ stability"],
+          evidence: "Intra-articular step >2mm leads to arthritis"
+        },
+        pediatricRules: {
+          absoluteSurgical: ["Salter-Harris III/IV displaced", "Irreducible", "Open"],
+          conservativeAcceptable: { "default": { description: "Most heal with cast - excellent remodeling" }},
+          defaultTreatment: "Closed reduction + cast"
+        }
+      },
+      "15": {
+        name: "Clavicle",
+        aoCode: "15",
+        region: "Upper Limb",
+        segments: { "15A": "Medial", "15B": "Midshaft", "15C": "Lateral" },
+        adultRules: {
+          ageThreshold: 16,
+          absoluteSurgical: ["Open", "Skin tenting", "Vascular injury", "Floating shoulder"],
+          relativeSurgical: ["Shortening >2cm", "Lateral end (Neer II) - high non-union"],
+          conservativeAcceptable: ["Most midshaft", "Accept up to 2cm shortening"],
+          defaultTreatment: "Sling; ORIF plate if operative",
+          keyPoints: ["Most heal conservatively", "Lateral Type II: high non-union", "Protect brachial plexus/subclavian"],
+          evidence: "Shortening >2cm associated with higher non-union"
+        }
+      },
+
+      // LOWER LIMB
+      "31B": {
+        name: "Femoral Neck",
+        aoCode: "31B",
+        region: "Lower Limb",
+        segments: { "31B1": "Subcapital minimal", "31B2": "Transcervical", "31B3": "Subcapital displaced" },
+        adultRules: {
+          ageThreshold: 16,
+          absoluteSurgical: ["ALL femoral neck fractures require surgery", "Young: urgent fixation <6-12h", "Displaced in elderly: arthroplasty"],
+          conservativeAcceptable: ["Only terminal illness or severe dementia with minimal pain"],
+          defaultTreatment: "Young: Cannulated screws; Elderly displaced: Hemiarthroplasty/THA",
+          keyPoints: ["Garden I/II: screws; III/IV elderly: arthroplasty", "Young = URGENT (<6-12h) to reduce AVN", "Check for shaft fracture", "Aspirate hemarthrosis"],
+          evidence: "Displaced fractures will not unite without fixation; elderly mobilize without delay"
+        }
+      },
+      "31A": {
+        name: "Intertrochanteric",
+        aoCode: "31A",
+        region: "Lower Limb",
+        segments: { "31A1": "Simple 2-part", "31A2": "Multifragmentary", "31A3": "Reverse oblique" },
+        adultRules: {
+          ageThreshold: 16,
+          absoluteSurgical: ["ALL intertrochanteric fractures require surgery"],
+          defaultTreatment: "Stable (31A1): DHS; Unstable (31A2, 31A3): Cephalomedullary nail",
+          keyPoints: ["Extracapsular = better blood supply", "Tip-apex distance <25mm", "Restore neck-shaft angle", "Cement augmentation for osteoporosis"],
+          evidence: "Extracapsular fractures have better healing than intracapsular"
+        }
+      },
+      "32": {
+        name: "Femoral Shaft",
+        aoCode: "32",
+        region: "Lower Limb",
+        segments: { "32A": "Simple", "32B": "Wedge", "32C": "Complex" },
+        adultRules: {
+          ageThreshold: 16,
+          absoluteSurgical: ["ALL adult femoral shaft fractures require operative fixation"],
+          defaultTreatment: "Antegrade reamed IM nail (gold standard)",
+          keyPoints: ["Check for ipsilateral neck fracture (10%)", "Reamed nailing for closed", "Restore length/alignment/rotation"],
+          evidence: "IM nailing is gold standard for adult femoral shaft"
+        },
+        pediatricRules: {
+          absoluteSurgical: ["Age >12: treat as adult", "Open", "Vascular injury"],
+          conservativeAcceptable: { "under6": { description: "Pavlik/spica cast" }, "6to12": { description: "Flexible IM nails preferred" }},
+          defaultTreatment: "<6: Spica cast; 6-12: Flexible nails"
+        }
+      },
+      "33": {
+        name: "Distal Femur",
+        aoCode: "33",
+        region: "Lower Limb",
+        segments: { "33A": "Extraarticular", "33B": "Partial articular", "33C": "Complete articular" },
+        adultRules: {
+          ageThreshold: 16,
+          absoluteSurgical: ["Displaced intra-articular", "Any displaced supracondylar", "Open", "Vascular injury"],
+          conservativeAcceptable: ["Undisplaced, stable, non-ambulatory"],
+          defaultTreatment: "ORIF lateral locking plate or retrograde IM nail",
+          keyPoints: ["Restore articular surface first", "Locking plate for osteoporosis", "Check popliteal vessels", "Early ROM"],
+          evidence: "Anatomical articular reduction essential"
+        }
+      },
+      "34": {
+        name: "Patella",
+        aoCode: "34",
+        region: "Lower Limb",
+        segments: { "34A": "Avulsion", "34B": "Partial articular", "34C": "Complete articular" },
+        adultRules: {
+          ageThreshold: 16,
+          absoluteSurgical: ["Displaced (>3mm step or >2mm gap)", "Loss of active extension", "Open"],
+          conservativeAcceptable: ["Undisplaced with intact extensor", "Gap <2mm, step <3mm"],
+          defaultTreatment: "Tension band wiring or circumferential wire",
+          keyPoints: ["Test active extension against gravity", "TBW converts tension to compression", "Partial patellectomy if inferior pole comminuted"],
+          evidence: "Cannot extend against gravity = operative"
+        }
+      },
+      "41": {
+        name: "Tibial Plateau",
+        aoCode: "41",
+        region: "Lower Limb",
+        segments: { "41B": "Partial articular (Schatzker I-IV)", "41C": "Complete articular (Schatzker V-VI)" },
+        adultRules: {
+          ageThreshold: 16,
+          absoluteSurgical: ["Articular step-off >2mm", "Condylar widening >5mm", "Associated ligament injury with instability", "Open", "Compartment syndrome"],
+          conservativeAcceptable: ["Undisplaced or minimally displaced", "Elderly low-demand with stable knee"],
+          defaultTreatment: "ORIF with plates ± bone graft/substitute",
+          keyPoints: ["Schatzker: I=lateral split, II=split-depression, III=pure depression, IV=medial, V=bicondylar, VI=+metaphyseal", "CT essential", "High compartment syndrome risk", "Check ligaments under anesthesia"],
+          evidence: ">2mm step-off associated with poor outcomes"
+        }
+      },
+      "42": {
+        name: "Tibial Shaft",
+        aoCode: "42",
+        region: "Lower Limb",
+        segments: { "42A": "Simple", "42B": "Wedge", "42C": "Complex" },
+        adultRules: {
+          ageThreshold: 16,
+          absoluteSurgical: ["Open", "Compartment syndrome", "Vascular injury", "Floating knee", "Unacceptable alignment (>5° varus/valgus, >10° AP)", "Polytrauma"],
+          conservativeAcceptable: ["Closed, stable, isolated with acceptable alignment"],
+          defaultTreatment: "IM nail (gold standard); Functional brace if non-operative",
+          keyPoints: ["Accept: <5° varus/valgus, <10° AP, <1cm shortening", "Reamed nail preferred closed", "High compartment syndrome risk", "Union 16-20 weeks"],
+          evidence: "IM nailing gold standard for displaced tibial shaft"
+        }
+      },
+      "43": {
+        name: "Pilon (Distal Tibia)",
+        aoCode: "43",
+        region: "Lower Limb",
+        segments: { "43A": "Extraarticular", "43B": "Partial articular", "43C": "Complete articular" },
+        adultRules: {
+          ageThreshold: 16,
+          absoluteSurgical: ["Displaced intra-articular", "Articular step >2mm", "Open"],
+          defaultTreatment: "Staged: Ex-fix → definitive ORIF when soft tissue ready",
+          keyPoints: ["High-energy = respect soft tissues", "Wrinkle test before surgery", "CT for planning", "Fibula first to restore length"],
+          evidence: "Staged protocol significantly reduces wound complications"
+        }
+      },
+      "44": {
+        name: "Ankle (Malleolar)",
+        aoCode: "44",
+        region: "Lower Limb",
+        segments: { "44A": "Infrasyndesmotic (Weber A)", "44B": "Transsyndesmotic (Weber B)", "44C": "Suprasyndesmotic (Weber C)" },
+        adultRules: {
+          ageThreshold: 16,
+          absoluteSurgical: ["Unstable ankle (talar shift)", "Bimalleolar/trimalleolar", "Open", "Syndesmosis injury with diastasis"],
+          conservativeAcceptable: ["Stable Weber A", "Isolated lateral malleolus, stable mortise"],
+          defaultTreatment: "ORIF: Lateral plate/screws, medial screws, syndesmosis screws if needed",
+          keyPoints: ["1mm talar shift = 42% increased contact pressure", "Stress views if uncertain stability", "Posterior malleolus: fix if >25% or step >2mm"],
+          evidence: "Talar shift >1mm increases contact pressure 42%"
+        }
+      },
+
+      // HAND/WRIST
+      "72": {
+        name: "Scaphoid",
+        aoCode: "72",
+        region: "Hand/Wrist",
+        segments: { "72A": "Distal pole", "72B": "Waist", "72C": "Proximal pole" },
+        adultRules: {
+          ageThreshold: 16,
+          absoluteSurgical: ["Displaced (>1mm or >15° angulation)", "Proximal pole (72C) - high AVN", "Perilunate injury", "Non-union"],
+          relativeSurgical: ["Waist fracture in high-demand patient"],
+          conservativeAcceptable: ["Undisplaced distal or waist", "Compliant for 8-12 weeks cast"],
+          defaultTreatment: "ORIF headless compression screw (Herbert)",
+          keyPoints: ["Blood supply distal - proximal pole at risk", "Thumb spica 8-12 weeks", "CT if X-ray equivocal", "MRI for occult"],
+          evidence: "Proximal pole: highest AVN and non-union risk"
+        }
+      },
+      "77": {
+        name: "Metacarpal (2nd-5th)",
+        aoCode: "77",
+        region: "Hand/Wrist",
+        segments: { "77A": "Head", "77B": "Neck (Boxer's)", "77C": "Shaft", "77D": "Base" },
+        adultRules: {
+          ageThreshold: 16,
+          absoluteSurgical: ["ANY rotational deformity", "Head: >2mm step", "Open", "Multiple metacarpals", "Fight bite"],
+          relativeSurgical: ["Neck: >50° angulation", "Shaft: >20-30° (index/middle)", ">3-4mm shortening"],
+          conservativeAcceptable: ["Neck 4th/5th: up to 40°", "Neck 2nd/3rd: up to 20°", "Shaft: stable, no rotation"],
+          defaultTreatment: "K-wires or plate for unstable",
+          keyPoints: ["ROTATION = SURGICAL (never remodels)", "Check: nails align, fingers point to scaphoid", "4th/5th tolerate more angulation", "Fight bite = emergency debridement"],
+          evidence: "Rotational deformity must be corrected"
+        }
+      },
+      "771": {
+        name: "Thumb Metacarpal",
+        aoCode: "771",
+        region: "Hand/Wrist",
+        segments: { "771A": "Extra-articular base", "771B": "Bennett's", "771C": "Rolando's" },
+        adultRules: {
+          ageThreshold: 16,
+          absoluteSurgical: ["Bennett's (all - unstable)", "Rolando's", "Base >30° angulation", "Open"],
+          conservativeAcceptable: ["Extra-articular <20-30° angulation"],
+          defaultTreatment: "Bennett's: K-wire or lag screw; Rolando's: K-wires/plate or ex-fix",
+          keyPoints: ["Bennett's: fragment stays with trapezium, shaft subluxates", "Unstable due to APL pull", "Rolando's = poor prognosis"],
+          evidence: "Bennett's: perfect reduction difficult to hold - fixation recommended"
+        }
+      },
+      "78": {
+        name: "Phalanx (Finger)",
+        aoCode: "78",
+        region: "Hand/Wrist",
+        segments: { "78P": "Proximal", "78M": "Middle", "78D": "Distal/Mallet" },
+        adultRules: {
+          ageThreshold: 16,
+          absoluteSurgical: ["ANY rotation", "Intra-articular >1-2mm step", "Condylar displaced", "Mallet with DIP subluxation", "Volar plate with subluxation", "Open"],
+          conservativeAcceptable: ["Undisplaced shaft", "Tuft fractures", "Mallet without subluxation - splint 8 weeks"],
+          defaultTreatment: "Buddy strap/splint; K-wires if operative",
+          keyPoints: ["ROTATION DOES NOT REMODEL", "Mallet: Stack splint 8 weeks CONSTANT", "Mallet surgery: high complications", "Start movement EARLY"],
+          evidence: "Mallet splintage 8 weeks usually successful; surgery high complication rate"
+        }
+      },
+
+      // FOOT
+      "82": {
+        name: "Calcaneus",
+        aoCode: "82",
+        region: "Foot",
+        segments: { "82A": "Extra-articular", "82B": "Tongue-type", "82C": "Joint depression (Sanders)" },
+        adultRules: {
+          ageThreshold: 16,
+          absoluteSurgical: ["Displaced intra-articular (Sanders II-IV) in suitable candidate", "Open", "Compartment syndrome", "Tongue-type with skin tenting"],
+          relativeSurgical: ["Sanders II in young active", "Böhler angle <20°", "Lateral wall blowout"],
+          conservativeAcceptable: ["Undisplaced", "Extra-articular (most)", "Sanders IV (primary fusion better)", "Smokers, diabetics, PVD"],
+          defaultTreatment: "ORIF extensile lateral; Primary subtalar fusion for Sanders IV",
+          keyPoints: ["Sanders on CT: I=undisplaced, II=2 fragments, III=3, IV=comminuted", "Böhler normal 25-40°", "10% bilateral - X-ray spine!", "Wrinkle test before surgery"],
+          evidence: "Canadian trial: similar outcomes operative vs non-operative; favor surgery in younger males"
+        }
+      },
+      "81": {
+        name: "Talus",
+        aoCode: "81",
+        region: "Foot",
+        segments: { "81.1": "Body", "81.2": "Neck (Hawkins)", "81.3": "Head" },
+        adultRules: {
+          ageThreshold: 16,
+          absoluteSurgical: ["Hawkins II (subtalar sublux)", "Hawkins III (body dislocation)", "Hawkins IV (+talonavicular)", "Displaced body", "Open", "Skin tenting (URGENT)"],
+          conservativeAcceptable: ["Truly undisplaced Hawkins I", "Minor avulsions"],
+          defaultTreatment: "ORIF lag screws ± medial malleolar osteotomy",
+          keyPoints: ["Hawkins: I=undisplaced, II=subtalar, III=body out, IV=+talonavicular", "AVN: I <10%, II 30-40%, III >90%", "Hawkins sign 6-8 weeks = no AVN", "Skin tenting = URGENT"],
+          evidence: "AVN varies with severity: Type I <10%, Type II 30-40%, Type III >90%"
+        }
+      },
+
+      // SPINE
+      "5": {
+        name: "Thoracolumbar Spine",
+        aoCode: "5",
+        region: "Spine",
+        segments: { "5A": "Compression", "5B": "Burst", "5C": "Chance/Distraction", "5D": "Fracture-dislocation" },
+        adultRules: {
+          ageThreshold: 16,
+          absoluteSurgical: ["Progressive neurological deficit", "Fracture-dislocation (5D)", "Unstable burst with neuro deficit", "Incomplete injury with cord compression"],
+          relativeSurgical: ["Burst >50% canal (controversial if neuro intact)", "Compression >40% height loss", "Kyphosis >30°"],
+          conservativeAcceptable: ["Stable compression <40%", "Stable burst, neuro intact", "Chance through bone"],
+          defaultTreatment: "TLSO brace 8-12 weeks if stable; Pedicle screws ± decompression if not",
+          keyPoints: ["Three columns: Anterior, Middle, Posterior", "TLICS: ≤3 conservative, ≥5 surgical", "Chance: check for abdominal injury!", "10% have second fracture"],
+          evidence: "Wood RCT: stable burst without neuro deficit - no difference operative vs non-operative"
+        }
+      },
+      "4": {
+        name: "Cervical Spine (C3-C7)",
+        aoCode: "4",
+        region: "Spine",
+        segments: { "4A": "Compression/Burst", "4B": "Distraction/Facet", "4C": "Rotation/Dislocation" },
+        adultRules: {
+          ageThreshold: 16,
+          absoluteSurgical: ["Bilateral jumped facets - URGENT", "Unilateral facet failed closed reduction", "Fracture-dislocation with deficit", "Progressive deterioration"],
+          conservativeAcceptable: ["Stable compression <25%", "Clay shoveler's (spinous process)"],
+          defaultTreatment: "Rigid collar/Halo-vest; Anterior corpectomy + plate or posterior fixation",
+          keyPoints: ["SLIC: ≤3 conservative, ≥5 surgical", "Jumped facets: >50% translation", "Tear-drop looks innocent but unstable!", "Check vertebral artery"],
+          evidence: "Bilateral facet dislocation must be reduced urgently"
+        }
+      }
+    };
+
+    const getRegionColor = (region) => {
+      switch(region) {
+        case "Upper Limb": return "bg-blue-900/50 border-blue-700";
+        case "Lower Limb": return "bg-green-900/50 border-green-700";
+        case "Hand/Wrist": return "bg-purple-900/50 border-purple-700";
+        case "Foot": return "bg-amber-900/50 border-amber-700";
+        case "Spine": return "bg-rose-900/50 border-rose-700";
+        default: return "bg-slate-800 border-slate-700";
+      }
+    };
+
+    const App = () => {
+      const [selectedFracture, setSelectedFracture] = useState("");
+      const [patientAge, setPatientAge] = useState("");
+      const [showResults, setShowResults] = useState(false);
+      const [searchTerm, setSearchTerm] = useState("");
+
+      const fracture = fractureDatabase[selectedFracture];
+      const isAdult = parseInt(patientAge) >= (fracture?.adultRules?.ageThreshold || 16);
+
+      const filteredFractures = Object.entries(fractureDatabase).filter(([code, data]) =>
+        data.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        code.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+
+      const regionOrder = ["Upper Limb", "Lower Limb", "Hand/Wrist", "Foot", "Spine"];
+      const grouped = filteredFractures.reduce((acc, [code, data]) => {
+        const r = data.region || "Other";
+        if (!acc[r]) acc[r] = [];
+        acc[r].push([code, data]);
+        return acc;
+      }, {});
+
+      const sortedGrouped = {};
+      regionOrder.forEach(r => { if (grouped[r]) sortedGrouped[r] = grouped[r]; });
+
+      const resetForm = () => {
+        setSelectedFracture("");
+        setPatientAge("");
+        setShowResults(false);
+      };
+
+      return (
+        <div className="min-h-screen bg-slate-900 text-white p-4">
+          <div className="max-w-2xl mx-auto">
+            <div className="text-center mb-6">
+              <h1 className="text-2xl font-bold text-cyan-400">🦴 Fracture Surgical Indications</h1>
+              <p className="text-slate-400 text-sm mt-1">AO Classification • Evidence-Based</p>
+            </div>
+
+            {!showResults ? (
+              <div className="space-y-4">
+                <div className="bg-slate-800 rounded-lg p-4">
+                  <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="🔍 Search (e.g., 'femoral neck', 'ankle')"
+                    className="w-full bg-slate-700 border border-slate-600 rounded-lg p-3 text-white"
+                  />
+                </div>
+
+                <div className="bg-slate-800 rounded-lg p-4">
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Select Fracture</label>
+                  <select
+                    value={selectedFracture}
+                    onChange={(e) => setSelectedFracture(e.target.value)}
+                    className="w-full bg-slate-700 border border-slate-600 rounded-lg p-3 text-white"
+                  >
+                    <option value="">Select fracture...</option>
+                    {Object.entries(sortedGrouped).map(([region, fractures]) => (
+                      <optgroup key={region} label={`── ${region} ──`}>
+                        {fractures.map(([code, data]) => (
+                          <option key={code} value={code}>{code} - {data.name}</option>
+                        ))}
+                      </optgroup>
+                    ))}
+                  </select>
+                </div>
+
+                {selectedFracture && (
+                  <div className={`rounded-lg p-4 border ${getRegionColor(fracture?.region)}`}>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">Patient Age</label>
+                    <input
+                      type="number"
+                      value={patientAge}
+                      onChange={(e) => setPatientAge(e.target.value)}
+                      placeholder="Enter age"
+                      className="w-full bg-slate-700 border border-slate-600 rounded-lg p-3 text-white"
+                    />
+                    {patientAge && (
+                      <p className="mt-2 text-sm">
+                        {isAdult ? (
+                          <span className="text-blue-400">→ Adult protocol</span>
+                        ) : (
+                          <span className="text-green-400">→ Pediatric protocol</span>
+                        )}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                <button
+                  onClick={() => setShowResults(true)}
+                  disabled={!selectedFracture || !patientAge}
+                  className="w-full bg-cyan-600 hover:bg-cyan-500 disabled:bg-slate-700 disabled:text-slate-500 text-white font-semibold py-4 rounded-lg transition-colors"
+                >
+                  Get Surgical Indications
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className={`rounded-lg p-4 border ${getRegionColor(fracture?.region)}`}>
+                  <h2 className="text-xl font-bold text-white">{fracture?.name}</h2>
+                  <p className="text-slate-400">AO: {fracture?.aoCode} • {isAdult ? "Adult" : "Pediatric"} ({patientAge}y)</p>
+                </div>
+
+                {/* Absolute Surgical */}
+                <div className="bg-red-900/30 border border-red-700 rounded-lg p-4">
+                  <h3 className="font-bold text-red-400 mb-3">🔴 Absolute Surgical Indications</h3>
+                  <ul className="space-y-2">
+                    {(isAdult ? fracture?.adultRules?.absoluteSurgical : fracture?.pediatricRules?.absoluteSurgical)?.map((item, idx) => (
+                      <li key={idx} className="flex items-start space-x-2">
+                        <span className="text-red-500 mt-1">•</span>
+                        <span className="text-slate-200 text-sm">{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Relative Surgical */}
+                {(isAdult && fracture?.adultRules?.relativeSurgical?.length > 0) && (
+                  <div className="bg-yellow-900/30 border border-yellow-700 rounded-lg p-4">
+                    <h3 className="font-bold text-yellow-400 mb-3">🟡 Relative Surgical Indications</h3>
+                    <ul className="space-y-2">
+                      {fracture.adultRules.relativeSurgical.map((item, idx) => (
+                        <li key={idx} className="flex items-start space-x-2">
+                          <span className="text-yellow-500 mt-1">•</span>
+                          <span className="text-slate-200 text-sm">{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Conservative */}
+                {(isAdult ? fracture?.adultRules?.conservativeAcceptable : fracture?.pediatricRules?.conservativeAcceptable) && (
+                  <div className="bg-green-900/30 border border-green-700 rounded-lg p-4">
+                    <h3 className="font-bold text-green-400 mb-3">🟢 Conservative Acceptable</h3>
+                    <ul className="space-y-2">
+                      {(Array.isArray(isAdult ? fracture?.adultRules?.conservativeAcceptable : null)
+                        ? fracture.adultRules.conservativeAcceptable
+                        : Object.values(fracture?.pediatricRules?.conservativeAcceptable || {}).map(v => v.description)
+                      ).map((item, idx) => (
+                        <li key={idx} className="flex items-start space-x-2">
+                          <span className="text-green-500 mt-1">•</span>
+                          <span className="text-slate-200 text-sm">{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Treatment */}
+                <div className="bg-slate-800 rounded-lg p-4">
+                  <h3 className="font-bold text-cyan-400 mb-2">💊 Default Treatment</h3>
+                  <p className="text-slate-200">{isAdult ? fracture?.adultRules?.defaultTreatment : fracture?.pediatricRules?.defaultTreatment}</p>
+                </div>
+
+                {/* Key Points */}
+                <div className="bg-slate-800 rounded-lg p-4">
+                  <h3 className="font-bold text-cyan-400 mb-3">💡 Key Points</h3>
+                  <ul className="space-y-2">
+                    {(isAdult ? fracture?.adultRules?.keyPoints : fracture?.pediatricRules?.keyPoints || fracture?.adultRules?.keyPoints)?.map((point, idx) => (
+                      <li key={idx} className="flex items-start space-x-2">
+                        <span className="text-cyan-500 mt-1">•</span>
+                        <span className="text-slate-300 text-sm">{point}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Evidence */}
+                {(isAdult ? fracture?.adultRules?.evidence : fracture?.pediatricRules?.evidence) && (
+                  <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700">
+                    <p className="text-slate-400 text-sm italic">📚 {isAdult ? fracture.adultRules.evidence : fracture.pediatricRules.evidence}</p>
+                  </div>
+                )}
+
+                <button onClick={resetForm} className="w-full bg-slate-700 hover:bg-slate-600 text-white font-semibold py-4 rounded-lg">
+                  ← New Assessment
+                </button>
+              </div>
+            )}
+
+            <div className="mt-8 text-center text-slate-500 text-xs">
+              <p>Based on Apley's, AO/OTA, Key Techniques in Orthopaedic Surgery</p>
+              <p className="mt-1">Clinical correlation required • Not a substitute for judgment</p>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
