@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="theme-color" content="#0f172a"/>
+<title>Fracture Surgical Indications</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦴</text></svg>">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#0f172a;color:#e2e8f0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;overscroll-behavior:none;-webkit-tap-highlight-color:transparent;min-height:100vh}
+body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+.wrap{max-width:640px;margin:0 auto;padding:20px 16px 40px}
+.hdr{text-align:center;margin-bottom:24px}
+.hdr h1{font-size:22px;font-weight:700;color:#22d3ee}
+.hdr p{font-size:13px;color:#94a3b8;margin-top:4px}
+.card{background:#1e293b;border-radius:12px;padding:16px;margin-bottom:12px}
+.card label{display:block;font-size:13px;color:#94a3b8;margin-bottom:8px;font-weight:500}
+input[type=text],input[type=number],select{width:100%;background:#0f172a;border:1px solid #334155;border-radius:8px;padding:10px 12px;color:#e2e8f0;font-size:15px;outline:none;-webkit-appearance:none;appearance:none}
+input[type=text]:focus,input[type=number]:focus,select:focus{border-color:#22d3ee}
+select option{background:#1e293b}
+.proto-badge{font-size:13px;margin-top:10px;min-height:20px}
+.proto-adult{color:#60a5fa}
+.proto-peds{color:#4ade80}
+.btn{display:block;width:100%;padding:14px;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;border:none;margin-top:4px;transition:background 0.15s}
+.btn-primary{background:#0891b2;color:#fff}
+.btn-primary:hover{background:#0e7490}
+.btn-primary:disabled{background:#1e293b;color:#475569;cursor:not-allowed}
+.btn-back{background:#1e293b;color:#e2e8f0;border:1px solid #334155;margin-bottom:16px}
+.btn-back:hover{background:#334155}
+
+/* Result header bands by region */
+.rhdr{border-radius:10px;padding:14px 16px;margin-bottom:12px;border:1px solid}
+.rhdr.upper{background:rgba(30,64,175,0.25);border-color:#3b82f6}
+.rhdr.lower{background:rgba(20,83,45,0.25);border-color:#22c55e}
+.rhdr.hand{background:rgba(88,28,135,0.25);border-color:#a855f7}
+.rhdr.foot{background:rgba(120,53,15,0.25);border-color:#f59e0b}
+.rhdr.spine{background:rgba(127,29,29,0.25);border-color:#ef4444}
+.rhdr h2{font-size:18px;font-weight:700;color:#f1f5f9}
+.rhdr p{font-size:13px;color:#94a3b8;margin-top:3px}
+
+.section{border-radius:10px;padding:14px 16px;margin-bottom:10px;border:1px solid}
+.sec-red{background:rgba(127,29,29,0.2);border-color:#b91c1c}
+.sec-yellow{background:rgba(120,53,15,0.2);border-color:#b45309}
+.sec-green{background:rgba(20,83,45,0.2);border-color:#15803d}
+.sec-neutral{background:#1e293b;border-color:#334155}
+.sec-title{font-size:13px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.sec-red .sec-title{color:#f87171}
+.sec-yellow .sec-title{color:#fbbf24}
+.sec-green .sec-title{color:#4ade80}
+.sec-neutral .sec-title{color:#22d3ee}
+.item{font-size:13px;color:#cbd5e1;padding:4px 0 4px 14px;border-left:2px solid #334155;margin-bottom:5px;line-height:1.5}
+.sec-red .item{border-left-color:#b91c1c}
+.sec-yellow .item{border-left-color:#b45309}
+.sec-green .item{border-left-color:#15803d}
+.evidence{font-size:12px;color:#94a3b8;font-style:italic;padding:10px 14px;border-radius:8px;border:1px solid #334155;background:#0f172a;margin-bottom:10px}
+.disclaimer{font-size:11px;color:#475569;text-align:center;margin-top:24px;line-height:1.6}
+#result-view{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hdr">
+    <h1>🦴 Fracture Surgical Indications</h1>
+    <p>AO Classification &bull; Evidence-Based &bull; Adult &amp; Paediatric</p>
+  </div>
+
+  <!-- FORM -->
+  <div id="form-view">
+    <div class="card">
+      <label>Search fracture</label>
+      <input type="text" id="search" placeholder="e.g. femoral neck, ankle, scaphoid…" oninput="filterFx()">
+    </div>
+    <div class="card">
+      <label>Select fracture type</label>
+      <select id="fx-select" onchange="onFxChange()">
+        <option value="">Select…</option>
+      </select>
+    </div>
+    <div class="card" id="age-card" style="display:none">
+      <label>Patient age (years)</label>
+      <input type="number" id="age" placeholder="Enter age" min="0" max="120" oninput="onAgeChange()">
+      <div class="proto-badge" id="proto-badge"></div>
+    </div>
+    <button class="btn btn-primary" id="go-btn" disabled onclick="showResult()">Show Indications</button>
+  </div>
+
+  <!-- RESULT -->
+  <div id="result-view">
+    <button class="btn btn-back" onclick="showForm()">&#8592; New Assessment</button>
+    <div id="result-content"></div>
+    <div class="disclaimer">
+      Based on Apley's System of Orthopaedics, AO/OTA Classification, Key Techniques in Orthopaedic Surgery<br>
+      Clinical correlation required &bull; Not a substitute for surgical judgment
+    </div>
+  </div>
+</div>
+
+<script>
+const DB = {
+  "Proximal humerus": {ao:"11",region:"upper",adult:{
+    abs:["4-part fracture in active patient","Fracture-dislocation (any type)","Head-splitting fracture","Displaced surgical neck with vascular compromise","Open fracture","Displaced greater tuberosity >5mm"],
+    rel:["3-part fracture in active patient","Displaced 2-part unstable after reduction"],
+    cons:["Minimally displaced (Neer 1-part)","Impacted valgus in elderly"],
+    tx:"ORIF locking plate / IM nail; Hemiarthroplasty or RSA for 4-part in elderly",
+    keys:["Neer: >1cm displacement or >45° = displaced","CT 3D for planning","Check axillary nerve","AVN risk increases with displacement"],
+    ev:"4-part fractures have high AVN risk; prosthetic replacement preferred in older patients"
+  },peds:null},
+
+  "Humeral shaft": {ao:"12",region:"upper",adult:{
+    abs:["Open fracture","Vascular injury","Floating elbow","Polytrauma / bilateral","Radial nerve palsy after manipulation","Unacceptable alignment (>20° sagittal, >30° coronal)"],
+    cons:["Most closed fractures — functional bracing acceptable","Accept <20° sagittal, <30° coronal, <3cm shortening"],
+    tx:"Functional brace (Sarmiento); ORIF plate if operative",
+    keys:["Heals well conservatively","Holstein-Lewis (distal 1/3 spiral) = radial nerve risk","Plate: 6 cortices each side"],
+    ev:"Great majority unite with non-operative treatment"
+  },peds:null},
+
+  "Distal humerus": {ao:"13",region:"upper",adult:{
+    abs:["Displaced intra-articular (13B, 13C)","Any displaced supracondylar in adult","Open fracture","Vascular injury"],
+    tx:"ORIF dual plating (medial + posterolateral)",
+    keys:["Olecranon osteotomy for exposure","Protect ulnar nerve","Early mobilisation critical","TEA option in elderly with comminution"],
+    ev:"Complex intra-articular fractures require anatomical reduction"
+  },peds:{
+    abs:["Gartland IIB and III supracondylar","Vascular compromise","Open fracture","Compartment syndrome"],
+    tx:"Closed reduction + K-wires",
+    keys:["Most common paediatric elbow fracture (5–7y)","Check brachial artery and AIN","Lateral pins safer"]
+  }},
+
+  "Radial head / neck": {ao:"2R1",region:"upper",adult:{
+    abs:["Mason III with ligament injury","Mason IV (with dislocation)","Terrible triad","Essex-Lopresti injury","Mechanical block >2mm"],
+    cons:["Mason I (undisplaced)","Stable elbow with no mechanical block"],
+    tx:"ORIF mini-screws (safe zone); radial head replacement if unreconstructable",
+    keys:["Mason I=undisplaced, II=displaced, III=comminuted, IV=+dislocation","Safe zone: 110° arc","NEVER excise if ligament injury present","Check DRUJ"],
+    ev:"If soft tissue injury present, radial head excision is contraindicated"
+  },peds:null},
+
+  "Olecranon": {ao:"2U1",region:"upper",adult:{
+    abs:["Displaced >2mm gap","Loss of active extension","Intra-articular step-off","Open fracture"],
+    cons:["Undisplaced with intact triceps","Elderly low-demand with comminution"],
+    tx:"Tension band wiring (TBW) or plate",
+    keys:["Test active extension against gravity","TBW for simple transverse fractures","Plate for oblique/comminuted","Hardware often prominent — may need removal"],
+    ev:"Loss of active extension against gravity = operative indication"
+  },peds:null},
+
+  "Both-bone forearm": {ao:"22",region:"upper",adult:{
+    abs:["All displaced adult both-bone forearm fractures","Open fracture","Compartment syndrome","Monteggia / Galeazzi injuries"],
+    tx:"ORIF both bones with 3.5mm LC-DCP plates",
+    keys:["Adults: virtually always operative","Restore radial bow","6 cortices each side minimum","Check DRUJ and PRUJ"],
+    ev:"No rotational remodelling in adults — anatomy must be restored"
+  },peds:{
+    abs:["Open fracture","Irreducible fracture","Unacceptable alignment after reduction","Compartment syndrome"],
+    cons:["<10y: up to 15° angulation acceptable (full remodelling)","≥10y: <10° angulation acceptable"],
+    tx:"Closed reduction + above-elbow cast",
+    keys:["Rotation does NOT remodel at any age","Younger = more remodelling of angulation","Remanipulate if slips within 7–10 days"]
+  }},
+
+  "Distal radius": {ao:"23",region:"upper",adult:{
+    abs:["Intra-articular step >2mm","Dorsal tilt >10° after reduction","Radial shortening >3mm","Unstable after reduction","Open fracture","Associated carpal injury"],
+    cons:["Extraarticular, stable, acceptable alignment","Elderly low-demand patient"],
+    tx:"Volar locking plate (ORIF); cast if non-operative",
+    keys:["Restore volar tilt (normal 11°)","Radial inclination (normal 22°)","Radial height (normal 12mm)","Check DRUJ stability"],
+    ev:"Intra-articular step >2mm leads to post-traumatic arthritis"
+  },peds:{
+    abs:["Salter-Harris III/IV displaced","Irreducible fracture","Open fracture"],
+    cons:["Most heal with cast — excellent remodelling potential"],
+    tx:"Closed reduction + above-elbow cast"
+  }},
+
+  "Clavicle": {ao:"15",region:"upper",adult:{
+    abs:["Open fracture","Skin tenting","Vascular injury","Floating shoulder"],
+    rel:["Shortening >2cm","Lateral end (Neer type II) — high non-union risk"],
+    cons:["Most midshaft fractures","Accept up to 2cm shortening"],
+    tx:"Sling; ORIF plate if operative",
+    keys:["Most heal conservatively","Lateral type II: high non-union rate","Protect brachial plexus / subclavian vessels"],
+    ev:"Shortening >2cm associated with higher non-union rate and shoulder symptoms"
+  },peds:null},
+
+  "Femoral neck": {ao:"31B",region:"lower",adult:{
+    abs:["ALL femoral neck fractures require surgery","Young patient: urgent fixation <6–12h to reduce AVN","Displaced in elderly: arthroplasty preferred"],
+    cons:["Only in terminal illness or severe dementia with minimal pain"],
+    tx:"Young: cannulated screws (URGENT); Elderly displaced: hemiarthroplasty or THA",
+    keys:["Garden I/II: screws; Garden III/IV elderly: arthroplasty","Young = URGENT within 6–12h to reduce AVN risk","Check for ipsilateral shaft fracture","Aspirate haemarthrosis to decompress capsule"],
+    ev:"Displaced fractures will not unite without fixation; early mobilisation critical in elderly"
+  },peds:null},
+
+  "Intertrochanteric": {ao:"31A",region:"lower",adult:{
+    abs:["ALL intertrochanteric fractures require operative fixation"],
+    tx:"Stable (31A1): DHS; Unstable (31A2, 31A3): cephalomedullary nail",
+    keys:["Extracapsular = better blood supply than femoral neck","Tip-apex distance <25mm","Restore neck-shaft angle","Cement augmentation for severe osteoporosis"],
+    ev:"Extracapsular fractures have better healing potential than intracapsular"
+  },peds:null},
+
+  "Femoral shaft": {ao:"32",region:"lower",adult:{
+    abs:["ALL adult femoral shaft fractures require operative fixation"],
+    tx:"Antegrade reamed IM nail (gold standard)",
+    keys:["Check for ipsilateral neck fracture (~10% incidence)","Reamed nailing for closed injuries","Restore length, alignment, and rotation"],
+    ev:"IM nailing is gold standard for adult femoral shaft fractures"
+  },peds:{
+    abs:["Age >12: treat as adult","Open fracture","Vascular injury"],
+    cons:["<6y: Pavlik harness or spica cast","6–12y: flexible IM nails preferred"],
+    tx:"<6y: spica cast; 6–12y: flexible nails; >12y: antegrade IM nail"
+  }},
+
+  "Distal femur": {ao:"33",region:"lower",adult:{
+    abs:["Displaced intra-articular fracture","Any displaced supracondylar fracture","Open fracture","Vascular injury"],
+    cons:["Undisplaced, stable fracture in non-ambulatory patient"],
+    tx:"ORIF lateral locking plate or retrograde IM nail",
+    keys:["Restore articular surface first (joint then metaphysis)","Locking plate for osteoporotic bone","Check popliteal vessels","Aim for early ROM"],
+    ev:"Anatomical articular reduction is essential for functional outcome"
+  },peds:null},
+
+  "Patella": {ao:"34",region:"lower",adult:{
+    abs:["Displaced >3mm step or >2mm gap","Loss of active extension","Open fracture"],
+    cons:["Undisplaced with intact extensor mechanism","Gap <2mm, step <3mm"],
+    tx:"Tension band wiring or circumferential wire/plate",
+    keys:["Test active extension against gravity — key clinical test","TBW converts tension to compression","Partial patellectomy if inferior pole comminuted"],
+    ev:"Inability to extend against gravity = operative indication"
+  },peds:null},
+
+  "Tibial plateau": {ao:"41",region:"lower",adult:{
+    abs:["Articular step-off >2mm","Condylar widening >5mm","Associated ligament injury with instability","Open fracture","Compartment syndrome"],
+    cons:["Undisplaced or minimally displaced","Elderly low-demand with stable knee"],
+    tx:"ORIF with plates ± bone graft / substitute",
+    keys:["Schatzker: I=lateral split, II=split-depression, III=pure depression, IV=medial, V=bicondylar, VI=+metaphyseal","CT essential for planning","High compartment syndrome risk — monitor closely","Check ligaments under anaesthesia"],
+    ev:">2mm articular step-off associated with significantly worse long-term outcomes"
+  },peds:null},
+
+  "Tibial shaft": {ao:"42",region:"lower",adult:{
+    abs:["Open fracture","Compartment syndrome","Vascular injury","Floating knee","Unacceptable alignment (>5° varus/valgus, >10° AP)","Polytrauma"],
+    cons:["Closed, stable, isolated fracture with acceptable alignment"],
+    tx:"IM nail (gold standard); functional brace if non-operative",
+    keys:["Acceptable: <5° varus/valgus, <10° AP, <1cm shortening","Reamed nail preferred for closed fractures","High compartment syndrome risk — monitor closely","Union expected 16–20 weeks"],
+    ev:"IM nailing is gold standard for displaced tibial shaft fractures"
+  },peds:null},
+
+  "Pilon (distal tibia)": {ao:"43",region:"lower",adult:{
+    abs:["Displaced intra-articular fracture","Articular step >2mm","Open fracture"],
+    tx:"Staged: external fixator → definitive ORIF when soft tissue ready (7–14 days)",
+    keys:["High-energy injury — always respect soft tissues","Wrinkle test before definitive surgery","CT for pre-operative planning","Fibula first to restore length"],
+    ev:"Staged protocol significantly reduces wound complications vs immediate ORIF"
+  },peds:null},
+
+  "Ankle (malleolar)": {ao:"44",region:"lower",adult:{
+    abs:["Unstable ankle (talar shift on mortise view)","Bimalleolar / trimalleolar fracture","Open fracture","Syndesmosis injury with diastasis"],
+    cons:["Stable Weber A","Isolated lateral malleolus with stable mortise"],
+    tx:"ORIF: lateral plate/screws, medial screws, syndesmosis screws if needed",
+    keys:["1mm talar shift = 42% increased contact pressure","Stress views if uncertain about stability","Posterior malleolus: fix if >25% joint surface or step >2mm"],
+    ev:"1mm talar shift increases tibiotalar contact pressure by 42%"
+  },peds:null},
+
+  "Scaphoid": {ao:"72",region:"hand",adult:{
+    abs:["Displaced (>1mm or >15° angulation)","Proximal pole fracture — high AVN risk","Perilunate injury","Established non-union"],
+    rel:["Waist fracture in high-demand patient wanting earlier return to activity"],
+    cons:["Undisplaced distal or waist fracture in compliant patient","Thumb spica cast 8–12 weeks"],
+    tx:"ORIF headless compression screw (Herbert / Acutrak)",
+    keys:["Blood supply enters distally — proximal pole at risk of AVN","CT if X-ray equivocal","MRI for occult fracture","Proximal pole: highest AVN and non-union risk"],
+    ev:"Proximal pole AVN risk up to 30–40%; fixation strongly recommended"
+  },peds:null},
+
+  "Metacarpal (2nd–5th)": {ao:"77",region:"hand",adult:{
+    abs:["ANY rotational deformity","Head fracture with >2mm step","Open fracture","Multiple metacarpals","Fight bite (emergency debridement)"],
+    rel:["Neck: >50° angulation","Shaft: >20–30° in index/middle finger",">3–4mm shortening"],
+    cons:["Neck 4th/5th: up to 40° angulation","Neck 2nd/3rd: up to 20°","Stable shaft with no rotational deformity"],
+    tx:"K-wires or plate for unstable fractures",
+    keys:["ROTATION = SURGICAL — it never remodels","Check: nails align, fingers converge to scaphoid when flexed","4th/5th tolerate more angulation than 2nd/3rd","Fight bite = emergency irrigation, debridement, and IV antibiotics"],
+    ev:"Rotational deformity must be corrected surgically; it does not remodel"
+  },peds:null},
+
+  "Thumb metacarpal": {ao:"771",region:"hand",adult:{
+    abs:["Bennett's fracture (all — inherently unstable)","Rolando's fracture","Base angulation >30°","Open fracture"],
+    cons:["Extra-articular fracture <20–30° angulation"],
+    tx:"Bennett's: K-wire or lag screw; Rolando's: K-wires / plate or external fixator",
+    keys:["Bennett's: small fragment stays with trapezium; shaft subluxes radially","Instability due to APL pull on proximal fragment","Rolando's = poor prognosis regardless of treatment"],
+    ev:"Bennett's fracture: anatomical reduction difficult to maintain without fixation"
+  },peds:null},
+
+  "Phalanx (finger)": {ao:"78",region:"hand",adult:{
+    abs:["ANY rotational deformity","Intra-articular step >1–2mm","Displaced condylar fracture","Mallet fracture with DIP subluxation","Volar plate injury with subluxation","Open fracture"],
+    cons:["Undisplaced shaft fracture","Tuft fracture","Mallet fracture without subluxation — splint 8 weeks continuously"],
+    tx:"Buddy strap / splint for stable; K-wires if operative",
+    keys:["ROTATION DOES NOT REMODEL — always check","Mallet: stack splint 8 weeks CONTINUOUSLY — must not break the cycle","Mallet surgery has high complication rate — splint first","Start early movement to prevent stiffness"],
+    ev:"Continuous mallet splinting 8 weeks usually successful; surgical complication rate high"
+  },peds:null},
+
+  "Calcaneus": {ao:"82",region:"foot",adult:{
+    abs:["Displaced intra-articular (Sanders II–IV) in suitable candidate","Open fracture","Compartment syndrome","Tongue-type with skin tenting"],
+    rel:["Sanders II in young active patient","Böhler angle <20°","Lateral wall blowout"],
+    cons:["Undisplaced fracture","Extra-articular fractures (most)","Sanders IV (primary subtalar fusion may be better outcome)","Smokers, diabetics, peripheral vascular disease — high wound risk"],
+    tx:"ORIF extensile lateral approach; primary subtalar fusion for Sanders IV",
+    keys:["Sanders CT: I=undisplaced, II=2 fragments, III=3 fragments, IV=comminuted","Normal Böhler angle 25–40°","10% bilateral — always X-ray the spine!","Wrinkle test before definitive surgery"],
+    ev:"RCT shows similar outcomes operative vs non-operative; surgery favoured in younger males"
+  },peds:null},
+
+  "Talus": {ao:"81",region:"foot",adult:{
+    abs:["Hawkins II (subtalar subluxation)","Hawkins III (body dislocation)","Hawkins IV (+talonavicular dislocation)","Displaced body fracture","Open fracture","Skin tenting — surgical emergency"],
+    cons:["Truly undisplaced Hawkins I","Minor avulsion fractures"],
+    tx:"ORIF lag screws ± medial malleolar osteotomy for access",
+    keys:["Hawkins: I=undisplaced, II=subtalar, III=body dislocated, IV=+talonavicular","AVN: type I <10%, type II 30–40%, type III >90%","Hawkins sign at 6–8 weeks = subchondral resorption = vascularity present = good sign","Skin tenting = surgical emergency"],
+    ev:"AVN risk correlates directly with displacement: type I <10%, type III >90%"
+  },peds:null},
+
+  "Thoracolumbar spine": {ao:"5",region:"spine",adult:{
+    abs:["Progressive neurological deficit","Fracture-dislocation","Unstable burst with neurological deficit","Incomplete cord injury with compression"],
+    rel:["Burst fracture with >50% canal compromise (controversial if neuro intact)","Compression with >40% height loss","Kyphosis >30°"],
+    cons:["Stable compression <40% height loss","Stable burst with intact neurology","Chance fracture through bone (bony Chance)"],
+    tx:"TLSO brace 8–12 weeks if stable; pedicle screw fixation ± decompression if unstable",
+    keys:["Three columns: anterior, middle, posterior","TLICS: ≤3 conservative, ≥5 surgical, 4 = borderline","Chance fracture: always check for hollow-organ abdominal injury","10% have a second spinal fracture — image the whole spine"],
+    ev:"Wood RCT: stable burst without neurological deficit — no significant difference operative vs non-operative"
+  },peds:null},
+
+  "Cervical spine (C3–C7)": {ao:"4",region:"spine",adult:{
+    abs:["Bilateral jumped facets — reduce urgently","Unilateral facet dislocation failed closed reduction","Fracture-dislocation with neurological deficit","Progressive neurological deterioration"],
+    cons:["Stable compression <25% height loss","Clay shoveler's fracture (spinous process avulsion)"],
+    tx:"Rigid collar / halo-vest if stable; anterior corpectomy + plate or posterior fixation if unstable",
+    keys:["SLIC: ≤3 conservative, ≥5 surgical","Jumped facets: anterior translation >50% of vertebral body","Tear-drop fracture looks minor but is highly unstable","CTA to check vertebral arteries if distracting injury"],
+    ev:"Bilateral facet dislocation must be reduced urgently to prevent cord injury"
+  },peds:null}
+};
+
+const REGION_CLASS = {upper:"upper",lower:"lower",hand:"hand",foot:"foot",spine:"spine"};
+const REGION_LABEL = {upper:"Upper Limb",lower:"Lower Limb",hand:"Hand / Wrist",foot:"Foot",spine:"Spine"};
+const REGION_ORDER = ["upper","lower","hand","foot","spine"];
+
+let allKeys = Object.keys(DB);
+let filtered = [...allKeys];
+
+function filterFx(){
+  const q = document.getElementById('search').value.toLowerCase();
+  filtered = allKeys.filter(k => k.toLowerCase().includes(q) || (DB[k].ao||'').toLowerCase().includes(q));
+  populateSelect();
+}
+
+function populateSelect(){
+  const sel = document.getElementById('fx-select');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">Select…</option>';
+  const groups = {};
+  filtered.forEach(k => {
+    const r = DB[k].region;
+    if(!groups[r]) groups[r] = [];
+    groups[r].push(k);
+  });
+  REGION_ORDER.forEach(r => {
+    if(!groups[r]) return;
+    const grp = document.createElement('optgroup');
+    grp.label = '── ' + REGION_LABEL[r] + ' ──';
+    groups[r].forEach(k => {
+      const o = document.createElement('option');
+      o.value = k;
+      o.textContent = k + '  (AO ' + DB[k].ao + ')';
+      if(k === cur) o.selected = true;
+      grp.appendChild(o);
+    });
+    sel.appendChild(grp);
+  });
+  checkReady();
+}
+
+function onFxChange(){
+  const fx = document.getElementById('fx-select').value;
+  document.getElementById('age-card').style.display = fx ? 'block' : 'none';
+  updateBadge();
+  checkReady();
+}
+
+function onAgeChange(){ updateBadge(); checkReady(); }
+
+function updateBadge(){
+  const fx = document.getElementById('fx-select').value;
+  const age = parseInt(document.getElementById('age').value);
+  const el = document.getElementById('proto-badge');
+  if(!fx || isNaN(age)){ el.textContent = ''; return; }
+  const hasPeds = DB[fx] && DB[fx].peds;
+  const isAdult = age >= 16;
+  if(!hasPeds || isAdult){
+    el.innerHTML = '<span class="proto-adult">→ Adult protocol</span>';
+  } else {
+    el.innerHTML = '<span class="proto-peds">→ Paediatric protocol</span>';
+  }
+}
+
+function checkReady(){
+  const fx = document.getElementById('fx-select').value;
+  const age = document.getElementById('age').value;
+  document.getElementById('go-btn').disabled = !(fx && age);
+}
+
+function items(arr){
+  if(!arr || !arr.length) return '';
+  return arr.map(i => '<div class="item">' + i + '</div>').join('');
+}
+
+function showResult(){
+  const fx = document.getElementById('fx-select').value;
+  const age = parseInt(document.getElementById('age').value);
+  const d = DB[fx];
+  const isAdult = !d.peds || age >= 16;
+  const r = isAdult ? d.adult : d.peds;
+  const rc = REGION_CLASS[d.region] || '';
+
+  let html = '';
+
+  // Header
+  html += '<div class="rhdr ' + rc + '">'
+        + '<h2>' + fx + '</h2>'
+        + '<p>AO ' + d.ao + ' &bull; ' + REGION_LABEL[d.region] + ' &bull; ' + (isAdult ? 'Adult' : 'Paediatric') + ' (' + age + 'y)</p>'
+        + '</div>';
+
+  // Absolute
+  if(r.abs && r.abs.length){
+    html += '<div class="section sec-red">'
+          + '<div class="sec-title">🔴 Absolute Surgical Indications</div>'
+          + items(r.abs)
+          + '</div>';
+  }
+
+  // Relative (adult only)
+  if(isAdult && r.rel && r.rel.length){
+    html += '<div class="section sec-yellow">'
+          + '<div class="sec-title">🟡 Relative Surgical Indications</div>'
+          + items(r.rel)
+          + '</div>';
+  }
+
+  // Conservative
+  if(r.cons && r.cons.length){
+    const consArr = Array.isArray(r.cons) ? r.cons : [r.cons];
+    html += '<div class="section sec-green">'
+          + '<div class="sec-title">🟢 Conservative Acceptable</div>'
+          + items(consArr)
+          + '</div>';
+  }
+
+  // Treatment
+  html += '<div class="section sec-neutral">'
+        + '<div class="sec-title">💊 Default Treatment</div>'
+        + '<div style="font-size:13px;color:#cbd5e1;line-height:1.6">' + r.tx + '</div>'
+        + '</div>';
+
+  // Key points
+  if(r.keys && r.keys.length){
+    html += '<div class="section sec-neutral">'
+          + '<div class="sec-title">💡 Key Points</div>'
+          + items(r.keys)
+          + '</div>';
+  }
+
+  // Evidence
+  if(r.ev){
+    html += '<div class="evidence">📚 ' + r.ev + '</div>';
+  }
+
+  document.getElementById('result-content').innerHTML = html;
+  document.getElementById('form-view').style.display = 'none';
+  document.getElementById('result-view').style.display = 'block';
+  window.scrollTo(0,0);
+}
+
+function showForm(){
+  document.getElementById('form-view').style.display = 'block';
+  document.getElementById('result-view').style.display = 'none';
+  window.scrollTo(0,0);
+}
+
+// Init
+populateSelect();
+</script>
+</body>
+</html>
